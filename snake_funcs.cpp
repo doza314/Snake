@@ -42,15 +42,18 @@ void showStartMenu(SDL_Renderer* renderer) {
 
     // Set the color of the text
     SDL_Color white = {255, 255, 255, 255};
+    
+    // Variables for flashing text
+    SDL_Texture* enterTexture = nullptr;
+    SDL_Rect enterRect = {1280 / 2 - 100, 720 / 2 + 25, 200, 50};
+    bool showEnterText = true;
+    Uint32 lastToggle = SDL_GetTicks();
+    const Uint32 toggleInterval = 250; // Time in milliseconds
 
     // Render the text
     SDL_Texture* messageTexture = renderText(message, "C:/Windows/Fonts/arial.ttf", white, 12, renderer);
     SDL_Rect messageRect = {1280 / 2 - 100, 720 / 2 - 25, 200, 50}; // Adjust these values as needed
     SDL_RenderCopy(renderer, messageTexture, NULL, &messageRect);
-
-    
-    SDL_Texture* enterTexture = renderText(enter, "C:/Windows/Fonts/arial.ttf", white, 12, renderer);
-    SDL_Rect enterRect = {1280 / 2 - 100, 720 / 2 + 25, 200, 50}; // Adjust these values as needed
 
     // Update the screen
     SDL_RenderPresent(renderer);
@@ -69,33 +72,29 @@ void showStartMenu(SDL_Renderer* renderer) {
                 }
             }
         }
-
-        //Flashing "Press Enter" text
-        SDL_RenderCopy(renderer, enterTexture, NULL, &enterRect);
-        SDL_RenderPresent(renderer);
-        SDL_Delay(250);
-
-        while (SDL_PollEvent(&event) != 0) {
-            if (event.type == SDL_QUIT) {
-                isGameOver = true;
-                startGame = true;
-            } else if (event.type == SDL_KEYDOWN) {
-                if (event.key.keysym.sym == SDLK_RETURN) {
-                    startGame = true;
-                }
-            }
+            // Toggle "Press Enter" visibility
+        Uint32 currentTime = SDL_GetTicks();
+        if (currentTime - lastToggle > toggleInterval) {
+            showEnterText = !showEnterText;
+            lastToggle = currentTime;
         }
-        
+
+        //Clear screen
         SDL_RenderClear(renderer);
-        SDL_RenderCopy(renderer, messageTexture, NULL, &messageRect); // Redraw the "Snake!" text
+
+        // Render main message
+        SDL_RenderCopy(renderer, messageTexture, NULL, &messageRect);
+
+        // Conditionally render "Press Enter" text
+        if (showEnterText) {
+            if (!enterTexture) { // Lazy load the texture
+                enterTexture = renderText(enter, "C:/Windows/Fonts/arial.ttf", white, 12, renderer);
+            }
+            SDL_RenderCopy(renderer, enterTexture, NULL, &enterRect);
+        }
+        // Update the screen
         SDL_RenderPresent(renderer);
-        SDL_Delay(250);
     }
-
-
-
-    // Clean up the texture
-    SDL_DestroyTexture(messageTexture);
 }
 
 
